@@ -821,7 +821,7 @@ with tab_chat:
         except Exception:
             pass
 
-    selected_model = "gemini-3.8-flash"
+    selected_model = "gemini-3.5-flash-lite"
 
     if "chat_messages" not in st.session_state:
         st.session_state["chat_messages"] = [
@@ -910,8 +910,7 @@ Strict Response Directives:
 
             with st.chat_message("assistant"):
                 with st.spinner("Analyzing Steam economics..."):
-                    ordered_pool = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-flash-latest"]
-                    target_models = [selected_model] + [m for m in ordered_pool if m != selected_model]
+                    target_models = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.6-flash", "gemma-4-26b-a4b-it", "gemini-3.7-flash", "gemini-3.8-flash"]
                     for mod in target_models:
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={clean_api_key}"
                         payload = {
@@ -940,7 +939,7 @@ Strict Response Directives:
                                 last_error = "Invalid API Key: The key provided was rejected by Google AI Studio. Please verify you copied the full key."
                                 break
                             last_error = f"HTTP {he.code}: {err_msg}"
-                            if he.code in [404, 503, 500, 429]:
+                            if he.code in [404, 429, 503, 500]:
                                 continue
                             else:
                                 break
