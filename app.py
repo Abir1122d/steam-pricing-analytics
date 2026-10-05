@@ -837,7 +837,7 @@ with tab_chat:
     with c_k2:
         selected_model = st.selectbox(
             "Gemini Model",
-            options=["gemini-2.5-flash", "gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"],
+            options=["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-2.5-flash"],
             index=0
         )
 
@@ -899,43 +899,48 @@ with tab_chat:
             system_instruction = """You are the Steam Game Pricing Copilot, an elite game economist, video game pricing strategist, and senior data scientist.
 You have comprehensive econometric knowledge of the Steam PC gaming marketplace based on our verified dataset of 57,506 commercial paid games ($0.99 to $79.99, minimum 5 reviews).
 
-Core Marketplace Metrics:
-- Total Commercial Games: 57,506
-- Platform Mean Price: $9.74 USD (Median: $6.99 USD, 75th percentile: $12.99)
-- Platform Mean Quality Score: 76.80 / 100 (Blended user sentiment and critic scores)
-- Platform Mean Value Score: 18.58 pts/$ (Calculated as Quality Score / Price)
-- Annual Catalog Dilution: Over 1200% catalog growth since 2014, causing median per-game ownership to drop by over 70%.
+Core Marketplace Metrics (57,506 Titles Dataset):
+- Total Commercial Games Analyzed: 57,506
+- Platform Mean Price: $9.74 USD (Median: $6.99 USD, 75th percentile: $12.99, 90th percentile: $19.99)
+- Platform Mean Quality Score: 76.80 / 100 (Blended user sentiment and positive review ratio)
+- Platform Mean Value Score: 18.58 pts/$ (Calculated as Quality Score / Price USD)
+- Annual Catalog Dilution: Over 1,200% catalog growth since 2014, causing median per-game ownership to drop by over 70%.
 
-4 Machine Learning Models in App:
-1. Model 1 (Ridge Regression L2): Predicts continuous fair benchmark retail price ($ USD) and implied value score (pts/$).
-2. Model 2 (Random Forest Classifier, 150 trees): Predicts discrete price tier probability distribution (Budget <$10, Mid-range $10-$30, Premium $30-$60, AAA >=$60).
+4 Integrated Machine Learning Models:
+1. Model 1 (Ridge Regression L2, alpha=10.0): Predicts continuous fair benchmark retail price ($ USD) and implied consumer value score (pts/$).
+2. Model 2 (Random Forest Classifier, 150 trees, max_depth=12): Predicts discrete price tier probability distribution (Budget <$10, Mid-range $10-$30, Premium $30-$60, AAA >=$60).
 3. Model 3 (K-Means Clustering, k=7): Segments the market into 7 distinct commercial archetypes:
-   - Archetype 0: Budget High-Value Indie ($5.17 avg price, 76.5 quality)
-   - Archetype 1: Low-Review Casual ($3.82 avg price, 62.1 quality)
-   - Archetype 2: Standard Mid-Tier ($18.17 avg price, 77.8 quality)
-   - Archetype 3: Premium High-Engagement ($34.90 avg price, 81.2 quality)
-   - Archetype 4: Ultra-Budget Bargain ($1.49 avg price, 71.4 quality)
-   - Archetype 5: Flagship Blockbuster AAA ($59.99 avg price, 78.5 quality)
-   - Archetype 6: Cult Hit / Strong Retention ($14.99 avg price, 89.4 quality)
-4. Model 4 (Calibrated Classifier, 150 trees): Evaluates pricing health and outputs continuous overpricing risk probability (0.0% to 100.0%) against residual baseline.
+   - Archetype 0: Budget High-Value Indie ($5.17 avg price, 76.5 quality score, high volume)
+   - Archetype 1: Low-Review Casual ($3.82 avg price, 62.1 quality score, low retention)
+   - Archetype 2: Standard Mid-Tier ($18.17 avg price, 77.8 quality score, balanced scope)
+   - Archetype 3: Premium High-Engagement ($34.90 avg price, 81.2 quality score, dedicated community)
+   - Archetype 4: Ultra-Budget Bargain ($1.49 avg price, 71.4 quality score, impulse purchase)
+   - Archetype 5: Flagship Blockbuster AAA ($59.99 avg price, 78.5 quality score, high production)
+   - Archetype 6: Cult Hit / Strong Retention ($14.99 avg price, 89.4 quality score, exceptional sentiment)
+4. Model 4 (Calibrated Classifier, 150 trees): Evaluates pricing health and outputs continuous overpricing risk probability (0.0% to 100.0%) relative to residual baseline (+35% tolerance).
 
-15 Empirical EDA Insights:
-- Q1: MMO ($14.07) and RPG ($11.95) have highest average prices; Casual ($4.87) is lowest.
-- Q2: Correlation between price and quality is 0.00 (completely decoupled). Higher prices do not guarantee higher review scores.
-- Q3: Casual (21.4 pts/$) and Indie (15.8 pts/$) offer highest consumer value scores.
-- Q4: Pre-2012 average prices were $15-$22; post-2014 influx dropped median to $4.99.
-- Q5: Extreme right-tail distribution in owners and CCU requires log transforms.
-- Q8: Multi-OS (Win+Mac+Linux) titles achieve higher average ownership than Windows-only.
-- Q9: $10-$30 Mid-range bracket generates the largest aggregate commercial revenue share.
-- Q11: Back-catalog titles experience 5-8% annual price decay through sales events.
-- Q12: Supporting >=5 languages delivers a 3.8x multiplier on average player ownership.
-- Q13: Full audio localization is standard for $30+ premium titles.
+Comprehensive 15 Exploratory Data Analysis (EDA) Findings:
+- Q1 (Genre Price Premiums): MMO ($14.07 avg) and RPG ($11.95 avg) command highest prices; Simulation ($10.42) and Strategy ($9.85) are mid-tier; Casual ($4.87) and Indie ($6.25) are lowest.
+- Q2 (Price vs Quality Decoupling): Statistical correlation between price and quality score is 0.00 (completely decoupled). Higher prices do not guarantee higher review scores.
+- Q3 (Value Score by Genre): Casual (21.4 pts/$) and Indie (15.8 pts/$) deliver highest consumer value per dollar. High-priced genres have lower value ratios.
+- Q4 (Release Year Pricing Trends): Pre-2012 average prices were $15-$22; post-2014 open publishing influx lowered platform median to ~$4.99 while catalog volume exploded.
+- Q5 (Ownership Dilution): Catalog supply growth outpaced player base expansion, driving down average per-title ownership and making store discovery competitive.
+- Q6 (Cross-Platform OS Support): Titles supporting Windows + macOS + Linux achieve significantly higher average player ownership compared to Windows-only releases.
+- Q7 (Player Retention & Playtime): Strategy and Simulation lead in 2-week active playtime retention; story-driven Adventure experiences sharp post-launch drop-off.
+- Q8 (Indie vs Major Studios): Indie titles average $6.25 vs $14.80 for non-indie, yet achieve comparable or superior review satisfaction (77.4% vs 75.1%).
+- Q9 (Predictive Drivers of Ownership): Peak CCU and review volume are 5x stronger predictors of commercial success than raw review percentage score.
+- Q10 (Review Ratings by Price Tier): Mid-range ($10-$30) and Premium ($30-$60) games achieve highest median positive review percentages (~82%), while budget under $5 has higher dispersion.
+- Q11 (Commercial Sweet Spot): The $9.99 to $19.99 window provides the optimal balance of perceived quality, consumer willingness-to-pay, and high value scores.
+- Q12 (Language Localization Impact): Titles localized into 5+ languages (Chinese, German, Russian, Japanese, Spanish) achieve 3.8x higher median player ownership.
+- Q13 (Platform & Accessibility Impact): Cross-platform games have higher average ratings (79.2% vs 74.8%) and 2.4x higher player retention.
+- Q14 (Feature Correlation Matrix): Total reviews, peak CCU, and owners correlate strongly with each other; price and quality decouple.
+- Q15 (Multi-Metric Genre Synthesis): Synthesis matrix confirming multidimensional tradeoffs across pricing, ownership, ratings, and value scores across all categories.
 
-Guidelines:
-- Provide structured, quantitative, actionable game business and pricing advice.
-- Cite specific figures, percentages, model metrics, and archetype profiles where relevant.
-- Format responses cleanly using Markdown headers, bullet points, and bold text.
-- If a user asks for a price recommendation, provide a concrete suggested retail price ($ USD), recommended price tier, value score projection, and risk mitigation tips.
+Strict Response Directives:
+1. Ground every explanation, recommendation, and insight directly in this 57,506-game Steam dataset and the 15 EDA findings.
+2. When explaining EDA findings or answering user queries, cite exact figures, percentages, model metrics, and archetype profiles.
+3. Keep every response thorough, well-structured, authoritative, and strictly within a 500-sentence budget limit.
+4. Format responses cleanly using Markdown headers, bullet points, and bold text.
 """
 
             clean_api_key = str(api_key_input).strip().strip('"').strip("'")
@@ -944,7 +949,8 @@ Guidelines:
 
             with st.chat_message("assistant"):
                 with st.spinner("Analyzing Steam economics..."):
-                    target_models = [selected_model] + [m for m in ["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"] if m != selected_model]
+                    ordered_pool = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-3.5-flash", "gemini-flash-latest"]
+                    target_models = [selected_model] + [m for m in ordered_pool if m != selected_model]
                     for mod in target_models:
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={clean_api_key}"
                         payload = {
@@ -955,7 +961,7 @@ Guidelines:
                         req_data = json.dumps(payload).encode("utf-8")
                         req = urllib.request.Request(url, data=req_data, headers={"Content-Type": "application/json"})
                         try:
-                            with urllib.request.urlopen(req, timeout=30) as resp:
+                            with urllib.request.urlopen(req, timeout=10) as resp:
                                 body = json.loads(resp.read().decode("utf-8"))
                                 if "candidates" in body and len(body["candidates"]) > 0:
                                     parts = body["candidates"][0].get("content", {}).get("parts", [])
