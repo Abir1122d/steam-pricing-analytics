@@ -837,7 +837,7 @@ with tab_chat:
     with c_k2:
         selected_model = st.selectbox(
             "Gemini Model",
-            options=["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"],
+            options=["gemini-2.5-flash", "gemini-3.6-flash", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"],
             index=0
         )
 
@@ -944,7 +944,7 @@ Guidelines:
 
             with st.chat_message("assistant"):
                 with st.spinner("Analyzing Steam economics..."):
-                    target_models = [selected_model] + [m for m in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.5-flash"] if m != selected_model]
+                    target_models = [selected_model] + [m for m in ["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.7-flash", "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"] if m != selected_model]
                     for mod in target_models:
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={clean_api_key}"
                         payload = {
@@ -955,7 +955,7 @@ Guidelines:
                         req_data = json.dumps(payload).encode("utf-8")
                         req = urllib.request.Request(url, data=req_data, headers={"Content-Type": "application/json"})
                         try:
-                            with urllib.request.urlopen(req, timeout=40) as resp:
+                            with urllib.request.urlopen(req, timeout=30) as resp:
                                 body = json.loads(resp.read().decode("utf-8"))
                                 if "candidates" in body and len(body["candidates"]) > 0:
                                     parts = body["candidates"][0].get("content", {}).get("parts", [])
@@ -970,16 +970,16 @@ Guidelines:
                             except Exception:
                                 err_msg = err_bytes
                             if he.code == 400 and ("API_KEY_INVALID" in err_bytes or "API key not valid" in err_msg):
-                                last_error = "Invalid API Key: The key provided was rejected by Google AI Studio. Please verify you copied the full key starting with AIzaSy..."
+                                last_error = "Invalid API Key: The key provided was rejected by Google AI Studio. Please verify you copied the full key."
                                 break
                             last_error = f"HTTP {he.code}: {err_msg}"
-                            if he.code == 404:
+                            if he.code in [404, 503, 500, 429]:
                                 continue
                             else:
                                 break
                         except Exception as ex:
                             last_error = str(ex)
-                            break
+                            continue
 
                     if reply_text is None and (last_error is None or "Invalid API Key" not in str(last_error)):
                         try:
