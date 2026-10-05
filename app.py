@@ -935,38 +935,61 @@ Guidelines:
 - If a user asks for a price recommendation, provide a concrete suggested retail price ($ USD), recommended price tier, value score projection, and risk mitigation tips.
 """
 
-            try:
-                from google import genai
-                from google.genai import types
-                client = genai.Client(api_key=api_key_input)
-                with st.chat_message("assistant"):
-                    with st.spinner("Analyzing Steam economics..."):
-                        response = client.models.generate_content(
-                            model=selected_model,
-                            contents=user_query,
-                            config=types.GenerateContentConfig(
-                                system_instruction=system_instruction,
-                                temperature=0.7
-                            )
-                        )
-                        reply_text = response.text
+            clean_api_key = str(api_key_input).strip().strip('"').strip("'")
+            reply_text = None
+            last_error = None
+
+            with st.chat_message("assistant"):
+                with st.spinner("Analyzing Steam economics..."):
+                    try:
+                        from google import genai
+                        from google.genai import types
+                        client = genai.Client(api_key=clean_api_key)
+                        models_to_try = [selected_model] + [m for m in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-lite"] if m != selected_model]
+                        for mod_name in models_to_try:
+                            try:
+                                response = client.models.generate_content(
+                                    model=mod_name,
+                                    contents=user_query,
+                                    config=types.GenerateContentConfig(
+                                        system_instruction=system_instruction,
+                                        temperature=0.7
+                                    )
+                                )
+                                if response and hasattr(response, "text") and response.text:
+                                    reply_text = response.text
+                                    break
+                            except Exception as mod_err:
+                                last_error = mod_err
+                                continue
+                    except Exception as sdk_err:
+                        last_error = sdk_err
+
+                    if reply_text is None:
+                        try:
+                            import google.generativeai as legacy_genai
+                            legacy_genai.configure(api_key=clean_api_key)
+                            legacy_models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-pro", "gemini-1.5-flash", "gemini-1.5-pro"]
+                            for leg_mod in legacy_models:
+                                try:
+                                    leg_model_obj = legacy_genai.GenerativeModel(
+                                        model_name=leg_mod,
+                                        system_instruction=system_instruction
+                                    )
+                                    response = leg_model_obj.generate_content(user_query)
+                                    if response and hasattr(response, "text") and response.text:
+                                        reply_text = response.text
+                                        break
+                                except Exception as leg_err:
+                                    last_error = leg_err
+                                    continue
+                        except Exception as leg_sdk_err:
+                            last_error = leg_sdk_err
+
+                    if reply_text:
                         st.markdown(reply_text)
                         st.session_state["chat_messages"].append({"role": "assistant", "content": reply_text})
-            except Exception as e:
-                try:
-                    import google.generativeai as legacy_genai
-                    legacy_genai.configure(api_key=api_key_input)
-                    leg_model = legacy_genai.GenerativeModel(
-                        model_name="gemini-1.5-flash" if "flash" in selected_model else "gemini-1.5-pro",
-                        system_instruction=system_instruction
-                    )
-                    with st.chat_message("assistant"):
-                        with st.spinner("Analyzing Steam economics..."):
-                            response = leg_model.generate_content(user_query)
-                            reply_text = response.text
-                            st.markdown(reply_text)
-                            st.session_state["chat_messages"].append({"role": "assistant", "content": reply_text})
-                except Exception as e2:
-                    with st.chat_message("assistant"):
-                        st.error(f"Error calling Gemini API: {str(e2)}")
+                    else:
+                        st.error(f"Error calling Gemini API: {str(last_error)}")
+                        st.info("💡 **Troubleshooting Tips:**\n1. Verify your Gemini API Key is active at [Google AI Studio](https://aistudio.google.com/app/apikey).\n2. If creating a new key, select 'Create API key in new project'.\n3. Ensure your API key has no IP or service-level restrictions.")
 
