@@ -219,7 +219,7 @@ tab_eda, tab_overview, tab_m12, tab_m3, tab_m4, tab_data, tab_chat = st.tabs([
     "🧩 Model 3: Market Segments",
     "⚖️ Model 4: Overpriced Screener",
     "📁 Catalog Data Explorer",
-    "🤖 AI Pricing Copilot (Gemini)"
+    "🤖 Steam Bot"
 ])
 
 with tab_eda:
@@ -810,8 +810,8 @@ with tab_data:
     )
 
 with tab_chat:
-    st.markdown("## 🤖 AI Pricing Copilot (Google Gemini)")
-    st.caption("Conversational game economist powered by Google Gemini and trained on 57,506 commercial Steam titles.")
+    st.markdown("## 🤖 Steam Bot")
+    st.caption("AI game economist & pricing strategist grounded in 57,506 commercial Steam releases and 15 EDA findings.")
 
     env_backend_key = os.environ.get("GEMINI_API_KEY", "")
     if not env_backend_key:
@@ -821,52 +821,15 @@ with tab_chat:
         except Exception:
             pass
 
-    c_k1, c_k2 = st.columns([2, 1])
-    with c_k1:
-        if env_backend_key:
-            api_key_input = env_backend_key
-            st.success("🔒 **Backend API Key Connected** (Secure Server Environment)")
-        else:
-            api_key_input = st.text_input(
-                "Google Gemini API Key",
-                type="password",
-                value="",
-                placeholder="Paste Gemini API key (AIzaSy...) or set in Secrets",
-                help="Set GEMINI_API_KEY in .streamlit/secrets.toml locally or in Streamlit Cloud Secrets dashboard."
-            )
-    with c_k2:
-        selected_model = st.selectbox(
-            "Gemini Model",
-            options=["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-2.5-flash"],
-            index=0
-        )
+    selected_model = "gemini-3.8-flash"
 
     if "chat_messages" not in st.session_state:
         st.session_state["chat_messages"] = [
             {
                 "role": "assistant",
-                "content": "👋 **Hello! I am your Steam Video Game Pricing Copilot powered by Google Gemini.**\n\nI have complete econometric knowledge of **57,506 commercial Steam titles**, our **4 Machine Learning Models** (Ridge, Random Forest, K-Means, and Calibrated Screener), and **15 empirical EDA findings**.\n\nAsk me anything about setting launch prices, analyzing genre elasticity, evaluating overpricing risk, or optimizing player retention!"
+                "content": "👋 **Hello! I am Steam Bot, your video game pricing and market analysis assistant.**\n\nI have complete econometric knowledge of **57,506 commercial Steam titles**, our **4 Machine Learning Models** (Ridge, Random Forest, K-Means, and Calibrated Screener), and all **15 empirical EDA findings**.\n\nAsk me anything about setting launch prices, analyzing genre elasticity, evaluating overpricing risk, or reviewing data insights!"
             }
         ]
-
-    st.markdown("#### Quick Prompt Suggestions")
-    chip_cols = st.columns(3)
-    quick_prompts = [
-        ("🎯 Optimal Indie RPG Launch", "Recommend an optimal launch price for a co-op indie action RPG with 8 supported languages and 82 target quality score. What are the trade-offs?"),
-        ("⚖️ Price vs Quality Decoupling", "Why is the correlation between price and review ratings ~0.00 on Steam? What does this mean for studio pricing strategy?"),
-        ("🚨 Overpricing Risk Audit", "Audit my proposed price of $29.99 for a single-player casual puzzle game with 75 quality. Is this at risk of being overpriced?"),
-        ("🌍 Localization ROI Impact", "How does adding 5 or more languages impact game ownership and revenue based on Steam market data?"),
-        ("🧩 Cult Hit Archetype Strategy", "Explain Market Archetype 6 (Cult Hit) vs Archetype 2 (Standard Mid-Tier). How can an indie team position for Archetype 6?"),
-        ("📉 Seasonal Discount Strategy", "What is the best seasonal discounting strategy for a 2-year-old indie game to maximize lifetime revenue without hurting brand equity?")
-    ]
-
-    clicked_prompt = None
-    for i, (label, prompt_text) in enumerate(quick_prompts):
-        with chip_cols[i % 3]:
-            if st.button(label, key=f"quick_btn_{i}", use_container_width=True):
-                clicked_prompt = prompt_text
-
-    st.markdown("---")
 
     c_head1, c_head2 = st.columns([3, 1])
     with c_head2:
@@ -883,20 +846,18 @@ with tab_chat:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    user_query = st.chat_input("Ask about Steam pricing, game strategy, or market analysis...")
-    if clicked_prompt:
-        user_query = clicked_prompt
+    user_query = st.chat_input("Ask Steam Bot about pricing, market dynamics, or dataset insights...")
 
     if user_query:
         st.session_state["chat_messages"].append({"role": "user", "content": user_query})
         with st.chat_message("user"):
             st.markdown(user_query)
 
-        if not api_key_input:
+        if not env_backend_key:
             with st.chat_message("assistant"):
-                st.error("⚠️ Please enter your **Google Gemini API Key** above to enable live AI reasoning. You can generate a free key at [Google AI Studio](https://aistudio.google.com/app/apikey).")
+                st.error("⚠️ Backend API Key not configured. Please ensure GEMINI_API_KEY is set in `.streamlit/secrets.toml` or your server environment variables.")
         else:
-            system_instruction = """You are the Steam Game Pricing Copilot, an elite game economist, video game pricing strategist, and senior data scientist.
+            system_instruction = """You are Steam Bot, an elite game economist, video game pricing strategist, and senior data scientist.
 You have comprehensive econometric knowledge of the Steam PC gaming marketplace based on our verified dataset of 57,506 commercial paid games ($0.99 to $79.99, minimum 5 reviews).
 
 Core Marketplace Metrics (57,506 Titles Dataset):
@@ -943,7 +904,7 @@ Strict Response Directives:
 4. Format responses cleanly using Markdown headers, bullet points, and bold text.
 """
 
-            clean_api_key = str(api_key_input).strip().strip('"').strip("'")
+            clean_api_key = str(env_backend_key).strip().strip('"').strip("'")
             reply_text = None
             last_error = None
 
