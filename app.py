@@ -5,6 +5,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import joblib
 import os
+import json
+import urllib.request
+import urllib.error
 
 st.set_page_config(
     page_title="Steam Video Game Pricing & Market Analytics",
@@ -941,50 +944,61 @@ Guidelines:
 
             with st.chat_message("assistant"):
                 with st.spinner("Analyzing Steam economics..."):
-                    try:
-                        from google import genai
-                        from google.genai import types
-                        client = genai.Client(api_key=clean_api_key)
-                        models_to_try = [selected_model] + [m for m in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-lite"] if m != selected_model]
-                        for mod_name in models_to_try:
-                            try:
-                                response = client.models.generate_content(
-                                    model=mod_name,
-                                    contents=user_query,
-                                    config=types.GenerateContentConfig(
-                                        system_instruction=system_instruction,
-                                        temperature=0.7
-                                    )
-                                )
-                                if response and hasattr(response, "text") and response.text:
-                                    reply_text = response.text
-                                    break
-                            except Exception as mod_err:
-                                last_error = mod_err
-                                continue
-                    except Exception as sdk_err:
-                        last_error = sdk_err
-
-                    if reply_text is None:
+                    target_models = [selected_model] + [m for m in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.5-flash"] if m != selected_model]
+                    for mod in target_models:
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{mod}:generateContent?key={clean_api_key}"
+                        payload = {
+                            "contents": [{"role": "user", "parts": [{"text": user_query}]}],
+                            "systemInstruction": {"parts": [{"text": system_instruction}]},
+                            "generationConfig": {"temperature": 0.7}
+                        }
+                        req_data = json.dumps(payload).encode("utf-8")
+                        req = urllib.request.Request(url, data=req_data, headers={"Content-Type": "application/json"})
                         try:
-                            import google.generativeai as legacy_genai
-                            legacy_genai.configure(api_key=clean_api_key)
-                            legacy_models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-pro", "gemini-1.5-flash", "gemini-1.5-pro"]
-                            for leg_mod in legacy_models:
-                                try:
-                                    leg_model_obj = legacy_genai.GenerativeModel(
-                                        model_name=leg_mod,
-                                        system_instruction=system_instruction
-                                    )
-                                    response = leg_model_obj.generate_content(user_query)
-                                    if response and hasattr(response, "text") and response.text:
-                                        reply_text = response.text
+                            with urllib.request.urlopen(req, timeout=40) as resp:
+                                body = json.loads(resp.read().decode("utf-8"))
+                                if "candidates" in body and len(body["candidates"]) > 0:
+                                    parts = body["candidates"][0].get("content", {}).get("parts", [])
+                                    if len(parts) > 0 and "text" in parts[0]:
+                                        reply_text = parts[0]["text"]
                                         break
-                                except Exception as leg_err:
-                                    last_error = leg_err
-                                    continue
-                        except Exception as leg_sdk_err:
-                            last_error = leg_sdk_err
+                        except urllib.error.HTTPError as he:
+                            err_bytes = he.read().decode("utf-8")
+                            try:
+                                err_obj = json.loads(err_bytes)
+                                err_msg = err_obj.get("error", {}).get("message", err_bytes)
+                            except Exception:
+                                err_msg = err_bytes
+                            if he.code == 400 and ("API_KEY_INVALID" in err_bytes or "API key not valid" in err_msg):
+                                last_error = "Invalid API Key: The key provided was rejected by Google AI Studio. Please verify you copied the full key starting with AIzaSy..."
+                                break
+                            last_error = f"HTTP {he.code}: {err_msg}"
+                            if he.code == 404:
+                                continue
+                            else:
+                                break
+                        except Exception as ex:
+                            last_error = str(ex)
+                            break
+
+                    if reply_text is None and (last_error is None or "Invalid API Key" not in str(last_error)):
+                        try:
+                            from google import genai
+                            from google.genai import types
+                            client = genai.Client(api_key=clean_api_key)
+                            res = client.models.generate_content(
+                                model=selected_model,
+                                contents=user_query,
+                                config=types.GenerateContentConfig(
+                                    system_instruction=system_instruction,
+                                    temperature=0.7
+                                )
+                            )
+                            if res and hasattr(res, "text") and res.text:
+                                reply_text = res.text
+                        except Exception as sdk_e:
+                            if last_error is None:
+                                last_error = sdk_e
 
                     if reply_text:
                         st.markdown(reply_text)
