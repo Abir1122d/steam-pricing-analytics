@@ -209,13 +209,14 @@ if is_indie_filter == "Indie Titles Only":
 elif is_indie_filter == "Non-Indie (Major Studios)":
     filtered_df = filtered_df[filtered_df["is_indie"] == 0]
 
-tab_eda, tab_overview, tab_m12, tab_m3, tab_m4, tab_data = st.tabs([
+tab_eda, tab_overview, tab_m12, tab_m3, tab_m4, tab_data, tab_chat = st.tabs([
     "📊 Complete EDA (15 Questions)",
     "📈 Market Overview",
     "🎯 Model 1 & 2: Pricing & Tiers",
     "🧩 Model 3: Market Segments",
     "⚖️ Model 4: Overpriced Screener",
-    "📁 Catalog Data Explorer"
+    "📁 Catalog Data Explorer",
+    "🤖 AI Pricing Copilot (Gemini)"
 ])
 
 with tab_eda:
@@ -804,3 +805,168 @@ with tab_data:
         ]].sort_values(by="total_review", ascending=False).head(200),
         use_container_width=True
     )
+
+with tab_chat:
+    st.markdown("## 🤖 AI Pricing Copilot (Google Gemini)")
+    st.caption("Conversational game economist powered by Google Gemini and trained on 57,506 commercial Steam titles.")
+
+    env_backend_key = os.environ.get("GEMINI_API_KEY", "")
+    if not env_backend_key:
+        try:
+            if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+                env_backend_key = str(st.secrets["GEMINI_API_KEY"])
+        except Exception:
+            pass
+
+    c_k1, c_k2 = st.columns([2, 1])
+    with c_k1:
+        if env_backend_key:
+            api_key_input = env_backend_key
+            st.success("🔒 **Backend API Key Connected** (Secure Server Environment)")
+        else:
+            api_key_input = st.text_input(
+                "Google Gemini API Key",
+                type="password",
+                value="",
+                placeholder="Paste Gemini API key (AIzaSy...) or set in Secrets",
+                help="Set GEMINI_API_KEY in .streamlit/secrets.toml locally or in Streamlit Cloud Secrets dashboard."
+            )
+    with c_k2:
+        selected_model = st.selectbox(
+            "Gemini Model",
+            options=["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"],
+            index=0
+        )
+
+    if "chat_messages" not in st.session_state:
+        st.session_state["chat_messages"] = [
+            {
+                "role": "assistant",
+                "content": "👋 **Hello! I am your Steam Video Game Pricing Copilot powered by Google Gemini.**\n\nI have complete econometric knowledge of **57,506 commercial Steam titles**, our **4 Machine Learning Models** (Ridge, Random Forest, K-Means, and Calibrated Screener), and **15 empirical EDA findings**.\n\nAsk me anything about setting launch prices, analyzing genre elasticity, evaluating overpricing risk, or optimizing player retention!"
+            }
+        ]
+
+    st.markdown("#### Quick Prompt Suggestions")
+    chip_cols = st.columns(3)
+    quick_prompts = [
+        ("🎯 Optimal Indie RPG Launch", "Recommend an optimal launch price for a co-op indie action RPG with 8 supported languages and 82 target quality score. What are the trade-offs?"),
+        ("⚖️ Price vs Quality Decoupling", "Why is the correlation between price and review ratings ~0.00 on Steam? What does this mean for studio pricing strategy?"),
+        ("🚨 Overpricing Risk Audit", "Audit my proposed price of $29.99 for a single-player casual puzzle game with 75 quality. Is this at risk of being overpriced?"),
+        ("🌍 Localization ROI Impact", "How does adding 5 or more languages impact game ownership and revenue based on Steam market data?"),
+        ("🧩 Cult Hit Archetype Strategy", "Explain Market Archetype 6 (Cult Hit) vs Archetype 2 (Standard Mid-Tier). How can an indie team position for Archetype 6?"),
+        ("📉 Seasonal Discount Strategy", "What is the best seasonal discounting strategy for a 2-year-old indie game to maximize lifetime revenue without hurting brand equity?")
+    ]
+
+    clicked_prompt = None
+    for i, (label, prompt_text) in enumerate(quick_prompts):
+        with chip_cols[i % 3]:
+            if st.button(label, key=f"quick_btn_{i}", use_container_width=True):
+                clicked_prompt = prompt_text
+
+    st.markdown("---")
+
+    c_head1, c_head2 = st.columns([3, 1])
+    with c_head2:
+        if st.button("🗑️ Clear Conversation", use_container_width=True):
+            st.session_state["chat_messages"] = [
+                {
+                    "role": "assistant",
+                    "content": "Conversation reset. How can I assist with your Steam pricing strategy today?"
+                }
+            ]
+            st.rerun()
+
+    for msg in st.session_state["chat_messages"]:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    user_query = st.chat_input("Ask about Steam pricing, game strategy, or market analysis...")
+    if clicked_prompt:
+        user_query = clicked_prompt
+
+    if user_query:
+        st.session_state["chat_messages"].append({"role": "user", "content": user_query})
+        with st.chat_message("user"):
+            st.markdown(user_query)
+
+        if not api_key_input:
+            with st.chat_message("assistant"):
+                st.error("⚠️ Please enter your **Google Gemini API Key** above to enable live AI reasoning. You can generate a free key at [Google AI Studio](https://aistudio.google.com/app/apikey).")
+        else:
+            system_instruction = """You are the Steam Game Pricing Copilot, an elite game economist, video game pricing strategist, and senior data scientist.
+You have comprehensive econometric knowledge of the Steam PC gaming marketplace based on our verified dataset of 57,506 commercial paid games ($0.99 to $79.99, minimum 5 reviews).
+
+Core Marketplace Metrics:
+- Total Commercial Games: 57,506
+- Platform Mean Price: $9.74 USD (Median: $6.99 USD, 75th percentile: $12.99)
+- Platform Mean Quality Score: 76.80 / 100 (Blended user sentiment and critic scores)
+- Platform Mean Value Score: 18.58 pts/$ (Calculated as Quality Score / Price)
+- Annual Catalog Dilution: Over 1200% catalog growth since 2014, causing median per-game ownership to drop by over 70%.
+
+4 Machine Learning Models in App:
+1. Model 1 (Ridge Regression L2): Predicts continuous fair benchmark retail price ($ USD) and implied value score (pts/$).
+2. Model 2 (Random Forest Classifier, 150 trees): Predicts discrete price tier probability distribution (Budget <$10, Mid-range $10-$30, Premium $30-$60, AAA >=$60).
+3. Model 3 (K-Means Clustering, k=7): Segments the market into 7 distinct commercial archetypes:
+   - Archetype 0: Budget High-Value Indie ($5.17 avg price, 76.5 quality)
+   - Archetype 1: Low-Review Casual ($3.82 avg price, 62.1 quality)
+   - Archetype 2: Standard Mid-Tier ($18.17 avg price, 77.8 quality)
+   - Archetype 3: Premium High-Engagement ($34.90 avg price, 81.2 quality)
+   - Archetype 4: Ultra-Budget Bargain ($1.49 avg price, 71.4 quality)
+   - Archetype 5: Flagship Blockbuster AAA ($59.99 avg price, 78.5 quality)
+   - Archetype 6: Cult Hit / Strong Retention ($14.99 avg price, 89.4 quality)
+4. Model 4 (Calibrated Classifier, 150 trees): Evaluates pricing health and outputs continuous overpricing risk probability (0.0% to 100.0%) against residual baseline.
+
+15 Empirical EDA Insights:
+- Q1: MMO ($14.07) and RPG ($11.95) have highest average prices; Casual ($4.87) is lowest.
+- Q2: Correlation between price and quality is 0.00 (completely decoupled). Higher prices do not guarantee higher review scores.
+- Q3: Casual (21.4 pts/$) and Indie (15.8 pts/$) offer highest consumer value scores.
+- Q4: Pre-2012 average prices were $15-$22; post-2014 influx dropped median to $4.99.
+- Q5: Extreme right-tail distribution in owners and CCU requires log transforms.
+- Q8: Multi-OS (Win+Mac+Linux) titles achieve higher average ownership than Windows-only.
+- Q9: $10-$30 Mid-range bracket generates the largest aggregate commercial revenue share.
+- Q11: Back-catalog titles experience 5-8% annual price decay through sales events.
+- Q12: Supporting >=5 languages delivers a 3.8x multiplier on average player ownership.
+- Q13: Full audio localization is standard for $30+ premium titles.
+
+Guidelines:
+- Provide structured, quantitative, actionable game business and pricing advice.
+- Cite specific figures, percentages, model metrics, and archetype profiles where relevant.
+- Format responses cleanly using Markdown headers, bullet points, and bold text.
+- If a user asks for a price recommendation, provide a concrete suggested retail price ($ USD), recommended price tier, value score projection, and risk mitigation tips.
+"""
+
+            try:
+                from google import genai
+                from google.genai import types
+                client = genai.Client(api_key=api_key_input)
+                with st.chat_message("assistant"):
+                    with st.spinner("Analyzing Steam economics..."):
+                        response = client.models.generate_content(
+                            model=selected_model,
+                            contents=user_query,
+                            config=types.GenerateContentConfig(
+                                system_instruction=system_instruction,
+                                temperature=0.7
+                            )
+                        )
+                        reply_text = response.text
+                        st.markdown(reply_text)
+                        st.session_state["chat_messages"].append({"role": "assistant", "content": reply_text})
+            except Exception as e:
+                try:
+                    import google.generativeai as legacy_genai
+                    legacy_genai.configure(api_key=api_key_input)
+                    leg_model = legacy_genai.GenerativeModel(
+                        model_name="gemini-1.5-flash" if "flash" in selected_model else "gemini-1.5-pro",
+                        system_instruction=system_instruction
+                    )
+                    with st.chat_message("assistant"):
+                        with st.spinner("Analyzing Steam economics..."):
+                            response = leg_model.generate_content(user_query)
+                            reply_text = response.text
+                            st.markdown(reply_text)
+                            st.session_state["chat_messages"].append({"role": "assistant", "content": reply_text})
+                except Exception as e2:
+                    with st.chat_message("assistant"):
+                        st.error(f"Error calling Gemini API: {str(e2)}")
+
