@@ -128,6 +128,63 @@ st.markdown("""
         line-height: 1.6 !important;
         margin-bottom: 8px !important;
     }
+
+    /* Interactive Box-Shaped Sidebar Navigation Tabs */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] {
+        background: transparent !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] > div {
+        gap: 10px !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
+        background: rgba(30, 41, 59, 0.7) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 12px !important;
+        padding: 12px 16px !important;
+        margin-bottom: 6px !important;
+        cursor: pointer !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
+        background: rgba(51, 65, 85, 0.9) !important;
+        border-color: #6366f1 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover span {
+        color: #ffffff !important;
+    }
+    /* Active Selected Box Tab */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked),
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-checked="true"] {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%) !important;
+        border: 1px solid #818cf8 !important;
+        box-shadow: 0 4px 18px rgba(79, 70, 229, 0.45) !important;
+        transform: scale(1.01) !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) p,
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-checked="true"] p {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+    /* Hide the default radio circle */
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label > div:first-child {
+        display: none !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 0.94rem !important;
+        font-weight: 600 !important;
+        color: #cbd5e1 !important;
+        letter-spacing: 0.01em !important;
+    }
     .question-box b {
         color: #ffffff !important;
         font-weight: 700 !important;
@@ -168,13 +225,13 @@ def load_models():
 df = load_data()
 models = load_models()
 
-NAV_EDA = "📊 Complete EDA (15 Questions)"
-NAV_OVERVIEW = "📈 Market Overview"
-NAV_M12 = "🎯 Model 1 & 2: Pricing & Tiers"
-NAV_M3 = "🧩 Model 3: Market Segments"
-NAV_M4 = "⚖️ Model 4: Overpriced Screener"
-NAV_DATA = "📁 Catalog Data Explorer"
-NAV_CHAT = "🤖 Steam Bot"
+NAV_EDA = "Complete EDA (15 Questions)"
+NAV_OVERVIEW = "Market Overview"
+NAV_M12 = "Model 1 & 2: Pricing & Tiers"
+NAV_M3 = "Model 3: Market Segments"
+NAV_M4 = "Model 4: Overpriced Screener"
+NAV_DATA = "Catalog Data Explorer"
+NAV_CHAT = "Steam Bot"
 
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg", width=50)
@@ -816,13 +873,7 @@ elif nav_selection == NAV_DATA:
 
 elif nav_selection == NAV_CHAT:
     STEAM_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg"
-
-    col_bot_logo, col_bot_title = st.columns([0.06, 0.94])
-    with col_bot_logo:
-        st.image(STEAM_LOGO_URL, width=44)
-    with col_bot_title:
-        st.markdown("<h2 style='margin:0; padding-top:2px;'>Steam Bot</h2>", unsafe_allow_html=True)
-        st.caption("AI game economist & pricing strategist grounded in 57,506 commercial Steam releases and 15 EDA findings.")
+    HOLLOW_KNIGHT_IMG = "https://cdn.cloudflare.steamstatic.com/steam/apps/367520/header.jpg"
 
     env_backend_key = os.environ.get("GEMINI_API_KEY", "")
     if not env_backend_key:
@@ -834,17 +885,23 @@ elif nav_selection == NAV_CHAT:
 
     selected_model = "gemini-3.5-flash-lite"
 
-    if "chat_messages" not in st.session_state:
-        st.session_state["chat_messages"] = [
-            {
-                "role": "assistant",
-                "content": "👋 **Hello! I am Steam Bot, your video game pricing and market analysis assistant.**\n\nI have complete econometric knowledge of **57,506 commercial Steam titles**, our **4 Machine Learning Models** (Ridge, Random Forest, K-Means, and Calibrated Screener), and all **15 empirical EDA findings**.\n\nAsk me anything about setting launch prices, analyzing genre elasticity, evaluating overpricing risk, or reviewing data insights!"
-            }
-        ]
+    c_head1, c_head2 = st.columns([2.8, 1.2])
+    with c_head1:
+        col_bot_logo, col_bot_title = st.columns([0.1, 0.9])
+        with col_bot_logo:
+            st.image(STEAM_LOGO_URL, width=54)
+        with col_bot_title:
+            st.markdown("<h2 style='margin:0; padding-top:2px;'>Steam Bot</h2>", unsafe_allow_html=True)
+            st.caption("AI game economist & pricing strategist grounded in 57,506 commercial Steam releases and 15 EDA findings.")
 
-    c_head1, c_head2 = st.columns([3, 1])
     with c_head2:
-        if st.button("🗑️ Clear Conversation", use_container_width=True):
+        st.markdown(f"""
+        <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 6px; margin-bottom: 8px; text-align: center;">
+            <img src="{HOLLOW_KNIGHT_IMG}" style="width: 100%; border-radius: 6px; display: block; margin-bottom: 4px;" alt="Hollow Knight">
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Hollow Knight (Top Benchmark)</span>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Clear Conversation", use_container_width=True):
             st.session_state["chat_messages"] = [
                 {
                     "role": "assistant",
@@ -852,6 +909,14 @@ elif nav_selection == NAV_CHAT:
                 }
             ]
             st.rerun()
+
+    if "chat_messages" not in st.session_state:
+        st.session_state["chat_messages"] = [
+            {
+                "role": "assistant",
+                "content": "👋 **Hello! I am Steam Bot, your video game pricing and market analysis assistant.**\n\nI have complete econometric knowledge of **57,506 commercial Steam titles**, our **4 Machine Learning Models** (Ridge, Random Forest, K-Means, and Calibrated Screener), and all **15 empirical EDA findings**.\n\nAsk me anything about setting launch prices, analyzing genre elasticity, evaluating overpricing risk, or reviewing data insights!"
+            }
+        ]
 
     for msg in st.session_state["chat_messages"]:
         avatar = STEAM_LOGO_URL if msg["role"] == "assistant" else None
