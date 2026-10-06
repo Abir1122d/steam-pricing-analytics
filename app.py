@@ -10,8 +10,8 @@ import urllib.request
 import urllib.error
 
 st.set_page_config(
-    page_title="Steam Video Game Pricing & Market Analytics",
-    page_icon="🎮",
+    page_title="SteamPulse AI - Video Game Pricing & Market Analytics",
+    page_icon="https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -168,61 +168,37 @@ def load_models():
 df = load_data()
 models = load_models()
 
+NAV_EDA = "📊 Complete EDA (15 Questions)"
+NAV_OVERVIEW = "📈 Market Overview"
+NAV_M12 = "🎯 Model 1 & 2: Pricing & Tiers"
+NAV_M3 = "🧩 Model 3: Market Segments"
+NAV_M4 = "⚖️ Model 4: Overpriced Screener"
+NAV_DATA = "📁 Catalog Data Explorer"
+NAV_CHAT = "🤖 Steam Bot"
+
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg", width=50)
-    st.title("Steam Pricing Lab")
+    st.title("SteamPulse AI")
     st.caption("Commercial Video Game Pricing Intelligence")
 
     st.markdown("---")
-    st.subheader("Global Catalog Filter")
+    st.markdown("### Navigation")
 
-    selected_tier = st.multiselect(
-        "Price Tier",
-        options=["Budget", "Mid-range", "Premium", "AAA"],
-        default=["Budget", "Mid-range", "Premium", "AAA"]
+    nav_selection = st.radio(
+        "Navigation Menu",
+        options=[
+            NAV_EDA,
+            NAV_OVERVIEW,
+            NAV_M12,
+            NAV_M3,
+            NAV_M4,
+            NAV_DATA,
+            NAV_CHAT
+        ],
+        label_visibility="collapsed"
     )
 
-    price_range = st.slider(
-        "Price Range ($ USD)",
-        min_value=float(df["price_usd"].min()),
-        max_value=float(df["price_usd"].max()),
-        value=(0.99, 79.99)
-    )
-
-    is_indie_filter = st.selectbox(
-        "Studio Classification",
-        options=["All Games", "Indie Titles Only", "Non-Indie (Major Studios)"]
-    )
-
-    st.markdown("---")
-    st.markdown("### Model Suite")
-    st.markdown("• **Model 1**: Value Score Predictor *(Ridge)*")
-    st.markdown("• **Model 2**: Price Tier Classifier *(Random Forest)*")
-    st.markdown("• **Model 3**: Market Segmentation *(K-Means)*")
-    st.markdown("• **Model 4**: Overpriced Screener *(Calibrated Classifier)*")
-
-filtered_df = df[
-    (df["price_tier_clean"].isin(selected_tier)) &
-    (df["price_usd"] >= price_range[0]) &
-    (df["price_usd"] <= price_range[1])
-]
-
-if is_indie_filter == "Indie Titles Only":
-    filtered_df = filtered_df[filtered_df["is_indie"] == 1]
-elif is_indie_filter == "Non-Indie (Major Studios)":
-    filtered_df = filtered_df[filtered_df["is_indie"] == 0]
-
-tab_eda, tab_overview, tab_m12, tab_m3, tab_m4, tab_data, tab_chat = st.tabs([
-    "📊 Complete EDA (15 Questions)",
-    "📈 Market Overview",
-    "🎯 Model 1 & 2: Pricing & Tiers",
-    "🧩 Model 3: Market Segments",
-    "⚖️ Model 4: Overpriced Screener",
-    "📁 Catalog Data Explorer",
-    "🤖 Steam Bot"
-])
-
-with tab_eda:
+if nav_selection == NAV_EDA:
     st.markdown("## Exploratory Data Analysis: 15 Core Questions")
     st.caption("Comprehensive analysis from the EDA Notebook covering 126,000+ Steam titles")
 
@@ -438,15 +414,11 @@ with tab_eda:
         </div>
         """, unsafe_allow_html=True)
 
-with tab_overview:
+elif nav_selection == NAV_OVERVIEW:
     st.markdown("## Steam Market Overview & Telemetry")
-    st.caption("Live statistical breakdown of the filtered dataset")
+    st.caption("Live statistical breakdown of the verified 57,506-title commercial Steam dataset")
 
-    if len(filtered_df) == 0:
-        st.warning("No games match the current filter selection. Showing overall catalog statistics.")
-        display_df = df
-    else:
-        display_df = filtered_df
+    display_df = df
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -528,7 +500,7 @@ with tab_overview:
         )
         st.plotly_chart(fig_val, use_container_width=True)
 
-with tab_m12:
+elif nav_selection == NAV_M12:
     st.markdown("## Interactive Pricing & Tier Predictor")
     st.caption("Deploying **Model 1 (Ridge Regression)** for Value Prediction & **Model 2 (Random Forest)** for Tier Classification")
 
@@ -649,15 +621,11 @@ with tab_m12:
         )
         st.plotly_chart(fig_prob, use_container_width=True)
 
-with tab_m3:
+elif nav_selection == NAV_M3:
     st.markdown("## Market Archetypes & Segmentation")
     st.caption("Deploying **Model 3 (K-Means Clustering)** to discover natural game personas across Steam")
 
-    target_df = filtered_df if len(filtered_df) > 0 else df
-    if len(filtered_df) == 0:
-        st.warning("No games match the current filter selection. Displaying clusters across the full catalog.")
-
-    df_sample = target_df.sample(min(3000, len(target_df))).copy()
+    df_sample = df.sample(min(3000, len(df))).copy()
 
     c_cl1, c_cl2 = st.columns([1.5, 1])
 
@@ -709,7 +677,7 @@ with tab_m3:
         - **Flagship Blockbuster**: Highest production scale and marketing reach.
         """)
 
-with tab_m4:
+elif nav_selection == NAV_M4:
     st.markdown("## Commercial Pricing Health & Overpriced Screener")
     st.caption("Deploying **Model 4 (Calibrated Classifier)** to screen commercial pricing risk")
 
@@ -791,27 +759,70 @@ with tab_m4:
         )
         st.plotly_chart(fig_gauge, use_container_width=True)
 
-with tab_data:
-    st.markdown("## Searchable Steam Catalog Dataset")
+elif nav_selection == NAV_DATA:
+    st.markdown("## 📁 Searchable Steam Catalog Dataset")
+    st.caption("Interactive data explorer for 57,506 commercial releases on Steam")
+
+    st.markdown("### Global Catalog Filters")
+    col_f1, col_f2, col_f3 = st.columns([1.2, 1.2, 1])
+
+    with col_f1:
+        selected_tier = st.multiselect(
+            "Price Tier",
+            options=["Budget", "Mid-range", "Premium", "AAA"],
+            default=["Budget", "Mid-range", "Premium", "AAA"]
+        )
+
+    with col_f2:
+        price_range = st.slider(
+            "Price Range ($ USD)",
+            min_value=float(df["price_usd"].min()),
+            max_value=float(df["price_usd"].max()),
+            value=(0.99, 79.99)
+        )
+
+    with col_f3:
+        is_indie_filter = st.selectbox(
+            "Studio Classification",
+            options=["All Games", "Indie Titles Only", "Non-Indie (Major Studios)"]
+        )
+
+    filtered_df = df[
+        (df["price_tier_clean"].isin(selected_tier)) &
+        (df["price_usd"] >= price_range[0]) &
+        (df["price_usd"] <= price_range[1])
+    ]
+
+    if is_indie_filter == "Indie Titles Only":
+        filtered_df = filtered_df[filtered_df["is_indie"] == 1]
+    elif is_indie_filter == "Non-Indie (Major Studios)":
+        filtered_df = filtered_df[filtered_df["is_indie"] == 0]
+
     if len(filtered_df) == 0:
         st.warning("No games match the current filter selection. Displaying full catalog.")
         data_to_show = df
     else:
         data_to_show = filtered_df
 
-    st.caption(f"Showing {len(data_to_show):,} titles")
+    st.markdown(f"**Showing {len(data_to_show):,} matching commercial titles** (Sorted by Review Volume)")
 
     st.dataframe(
         data_to_show[[
             "name", "price_usd", "price_tier_clean", "quality_score",
             "value_score_calc", "total_review", "primary_genre", "is_indie"
-        ]].sort_values(by="total_review", ascending=False).head(200),
+        ]].sort_values(by="total_review", ascending=False).head(250),
         use_container_width=True
     )
 
-with tab_chat:
-    st.markdown("## 🤖 Steam Bot")
-    st.caption("AI game economist & pricing strategist grounded in 57,506 commercial Steam releases and 15 EDA findings.")
+elif nav_selection == NAV_CHAT:
+    STEAM_LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg"
+
+    col_bot_logo, col_bot_title = st.columns([0.06, 0.94])
+    with col_bot_logo:
+        st.image(STEAM_LOGO_URL, width=44)
+    with col_bot_title:
+        st.markdown("<h2 style='margin:0; padding-top:2px;'>Steam Bot</h2>", unsafe_allow_html=True)
+        st.caption("AI game economist & pricing strategist grounded in 57,506 commercial Steam releases and 15 EDA findings.")
 
     env_backend_key = os.environ.get("GEMINI_API_KEY", "")
     if not env_backend_key:
@@ -843,7 +854,8 @@ with tab_chat:
             st.rerun()
 
     for msg in st.session_state["chat_messages"]:
-        with st.chat_message(msg["role"]):
+        avatar = STEAM_LOGO_URL if msg["role"] == "assistant" else None
+        with st.chat_message(msg["role"], avatar=avatar):
             st.markdown(msg["content"])
 
     user_query = st.chat_input("Ask Steam Bot about pricing, market dynamics, or dataset insights...")
@@ -854,7 +866,7 @@ with tab_chat:
             st.markdown(user_query)
 
         if not env_backend_key:
-            with st.chat_message("assistant"):
+            with st.chat_message("assistant", avatar=STEAM_LOGO_URL):
                 st.error("⚠️ Backend API Key not configured. Please ensure GEMINI_API_KEY is set in `.streamlit/secrets.toml` or your server environment variables.")
         else:
             system_instruction = """You are Steam Bot, an elite game economist, video game pricing strategist, and senior data scientist.
@@ -908,7 +920,7 @@ Strict Response Directives:
             reply_text = None
             last_error = None
 
-            with st.chat_message("assistant"):
+            with st.chat_message("assistant", avatar=STEAM_LOGO_URL):
                 with st.spinner("Analyzing Steam economics..."):
                     target_models = ["gemini-3.5-flash-lite", "gemini-flash-lite-latest", "gemini-3.6-flash", "gemma-4-26b-a4b-it", "gemini-3.7-flash", "gemini-3.8-flash"]
                     for mod in target_models:
