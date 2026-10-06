@@ -129,61 +129,72 @@ st.markdown("""
         margin-bottom: 8px !important;
     }
 
-    /* Interactive Box-Shaped Sidebar Navigation Tabs */
+    /* Game-Style Solid Box Sidebar Navigation Tabs (Equal Size) */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] {
         background: transparent !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] > div {
-        gap: 10px !important;
+        gap: 12px !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
-        background: rgba(30, 41, 59, 0.7) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 12px !important;
-        padding: 12px 16px !important;
-        margin-bottom: 6px !important;
-        cursor: pointer !important;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        display: flex !important;
-        align-items: center !important;
+        background: #1e293b !important;
+        border: 2px solid #334155 !important;
+        border-radius: 8px !important;
+        padding: 0 16px !important;
+        margin-bottom: 4px !important;
+        height: 52px !important;
+        min-height: 52px !important;
+        max-height: 52px !important;
         width: 100% !important;
         box-sizing: border-box !important;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease-in-out !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        box-shadow: 0 4px 0 #0f172a !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover {
-        background: rgba(51, 65, 85, 0.9) !important;
-        border-color: #6366f1 !important;
+        background: #283548 !important;
+        border-color: #38bdf8 !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+        box-shadow: 0 6px 0 #0f172a !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label:hover span {
         color: #ffffff !important;
     }
-    /* Active Selected Box Tab */
+    /* Active Selected Solid Game Box Tab */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked),
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-checked="true"] {
-        background: linear-gradient(135deg, rgba(79, 70, 229, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%) !important;
-        border: 1px solid #818cf8 !important;
-        box-shadow: 0 4px 18px rgba(79, 70, 229, 0.45) !important;
-        transform: scale(1.01) !important;
+        background: #4f46e5 !important;
+        border: 2px solid #818cf8 !important;
+        box-shadow: 0 4px 0 #312e81, 0 0 12px rgba(99, 102, 241, 0.4) !important;
+        transform: translateY(1px) !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label:has(input:checked) p,
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label[data-checked="true"] p {
         color: #ffffff !important;
         font-weight: 700 !important;
     }
-    /* Hide the default radio circle */
+    /* Hide default radio circles */
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label > div:first-child {
         display: none !important;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
     }
     section[data-testid="stSidebar"] div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
         margin: 0 !important;
         padding: 0 !important;
-        font-size: 0.94rem !important;
+        font-size: 0.90rem !important;
         font-weight: 600 !important;
         color: #cbd5e1 !important;
-        letter-spacing: 0.01em !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
     }
     .question-box b {
         color: #ffffff !important;
@@ -237,12 +248,10 @@ with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg", width=50)
     st.title("SteamPulse AI")
     st.caption("Commercial Video Game Pricing Intelligence")
-
     st.markdown("---")
-    st.markdown("### Navigation")
 
     nav_selection = st.radio(
-        "Navigation Menu",
+        "Menu",
         options=[
             NAV_EDA,
             NAV_OVERVIEW,
